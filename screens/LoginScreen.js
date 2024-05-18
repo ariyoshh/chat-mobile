@@ -4,7 +4,7 @@ import axios from 'axios';
 
 const LoginScreen = ({ navigation }) => {
   const [usuario, setUsuario] = useState('');
-  const serverUrl = 'http://192.168.15.20:3000';
+  const serverUrl = 'http://192.168.15.19:3000'; 
 
   const handleLogin = async () => {
     try {
