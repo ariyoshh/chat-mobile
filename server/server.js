@@ -100,6 +100,19 @@ app.get('/consultaMensagens', async (req, res) => {
   res.send(mensagens);
 });
 
+app.post('/marcarMensagensComoLidas', async (req, res) => {
+  const { identificadorUsuario, identificadorUsuarioDestino } = req.body;
+  await Mensagem.updateMany(
+    { 
+      identificadorUsuarioRemetente: identificadorUsuarioDestino, 
+      identificadorUsuarioDestinatario: identificadorUsuario, 
+      lida: false 
+    },
+    { $set: { lida: true } }
+  );
+  res.send('Mensagens marcadas como lidas');
+});
+
 app.post('/limparConversas', async (req, res) => {
   const { identificadorUsuario } = req.body;
   try {
