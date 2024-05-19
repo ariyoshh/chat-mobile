@@ -47,11 +47,11 @@ app.post('/encerraChat', async (req, res) => {
   const { identificadorUsuario } = req.body;
   console.log(`Encerrando chat para o usuário: ${identificadorUsuario}`);
   await Usuario.deleteOne({ identificador: identificadorUsuario });
-  await Mensagem.deleteMany({ 
+  await Mensagem.deleteMany({
     $or: [
-      { identificadorUsuarioRemetente: identificadorUsuario }, 
+      { identificadorUsuarioRemetente: identificadorUsuario },
       { identificadorUsuarioDestinatario: identificadorUsuario }
-    ] 
+    ]
   });
   res.send('Chat encerrado');
 });
@@ -64,9 +64,9 @@ app.get('/consultaUsuarios', async (req, res) => {
 app.post('/msgAll', async (req, res) => {
   const { identificadorUsuario, msg } = req.body;
   const usuario = await Usuario.findOne({ identificador: identificadorUsuario });
-  const newMessage = new Mensagem({ 
-    msg, 
-    dataHoraMsg: new Date(), 
+  const newMessage = new Mensagem({
+    msg,
+    dataHoraMsg: new Date(),
     identificadorUsuarioRemetente: identificadorUsuario,
     identificadorUsuarioDestinatario: null,
     remetente: usuario ? usuario.usuario : 'Desconhecido'
@@ -78,9 +78,9 @@ app.post('/msgAll', async (req, res) => {
 app.post('/msg', async (req, res) => {
   const { identificadorUsuario, msg, identificadorUsuarioDestino } = req.body;
   const usuario = await Usuario.findOne({ identificador: identificadorUsuario });
-  const newMessage = new Mensagem({ 
-    msg, 
-    dataHoraMsg: new Date(), 
+  const newMessage = new Mensagem({
+    msg,
+    dataHoraMsg: new Date(),
     identificadorUsuarioRemetente: identificadorUsuario,
     identificadorUsuarioDestinatario: identificadorUsuarioDestino,
     remetente: usuario ? usuario.usuario : 'Desconhecido'
@@ -90,27 +90,19 @@ app.post('/msg', async (req, res) => {
 });
 
 app.get('/consultaMensagens', async (req, res) => {
-  const { identificadorUsuario } = req.query;
-  const mensagens = await Mensagem.find({
-    $or: [
-      { identificadorUsuarioDestinatario: identificadorUsuario },
-      { identificadorUsuarioDestinatario: null }
-    ]
-  }).sort({ dataHoraMsg: -1 }).limit(50);
-  res.send(mensagens);
-});
-
-app.post('/marcarMensagensComoLidas', async (req, res) => {
-  const { identificadorUsuario, identificadorUsuarioDestino } = req.body;
-  await Mensagem.updateMany(
-    { 
-      identificadorUsuarioRemetente: identificadorUsuarioDestino, 
-      identificadorUsuarioDestinatario: identificadorUsuario, 
-      lida: false 
-    },
-    { $set: { lida: true } }
-  );
-  res.send('Mensagens marcadas como lidas');
+  const { identificadorUsuario, chatMode } = req.query;
+  let mensagens;
+  if (chatMode === 'geral') {
+    mensagens = await Mensagem.find({ identificadorUsuarioDestinatario: null });
+  } else {
+    mensagens = await Mensagem.find({
+      $or: [
+        { identificadorUsuarioRemetente: identificadorUsuario, identificadorUsuarioDestinatario: chatMode },
+        { identificadorUsuarioRemetente: chatMode, identificadorUsuarioDestinatario: identificadorUsuario }
+      ]
+    });
+  }
+  res.send(mensagens.sort((a, b) => a.dataHoraMsg - b.dataHoraMsg));
 });
 
 app.post('/limparConversas', async (req, res) => {
@@ -136,6 +128,23 @@ app.post('/derrubarUsuarios', async (req, res) => {
     res.send('Todos os usuários e mensagens foram removidos.');
   } catch (error) {
     res.status(500).send('Erro ao remover os usuários e mensagens');
+  }
+});
+
+app.post('/marcaMensagensComoLidas', async (req, res) => {
+  const { identificadorUsuario, chatMode } = req.body;
+  try {
+    await Mensagem.updateMany(
+      {
+        identificadorUsuarioDestinatario: identificadorUsuario,
+        identificadorUsuarioRemetente: chatMode,
+        lida: false
+      },
+      { $set: { lida: true } }
+    );
+    res.send('Mensagens marcadas como lidas.');
+  } catch (error) {
+    res.status(500).send('Erro ao marcar mensagens como lidas.');
   }
 });
 

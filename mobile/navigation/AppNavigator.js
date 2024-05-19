@@ -7,7 +7,6 @@ import axios from 'axios';
 import LoginScreen from '../screens/LoginScreen';
 import ChatScreen from '../screens/ChatScreen';
 import HomeScreen from '../screens/HomeScreen';
-import ConfigScreen from '../screens/ConfigScreen';
 
 const Stack = createStackNavigator();
 
@@ -43,10 +42,6 @@ const AppNavigator = () => {
         <Stack.Screen 
           name="Home" 
           component={HomeScreen} 
-        />
-        <Stack.Screen 
-          name="Config" 
-          component={ConfigScreen} 
         />
         <Stack.Screen 
           name="Chat" 
